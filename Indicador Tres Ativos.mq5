@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|                                        Indicador Tres Ativos.mq5 |
+//|                                          Indicador Tres BDRs.mq5 |
 //|                        Copyright 2015, MetaQuotes Software Corp. |
 //|                                             https://www.mql5.com |
 //+------------------------------------------------------------------+
