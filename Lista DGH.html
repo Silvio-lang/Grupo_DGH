@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grupo DGH</title>
+
+<style>
+  /* Seu CSS completo antigo + alerta botão */
+  body {
+    font-family: Arial, sans-serif;
+    margin: 10px;
+    max-width: 900px;
+  }
+  h1, h2 {
+    text-align: center;
+    color: #155724;
+    margin-bottom: 10px;
+  }
+  .filter, .list, .import-export {
+    margin: 15px 0;
+  }
+  input, select, button, textarea {
+    padding: 6px;
+    font-size: 1rem;
+    margin: 2px 0;
+  }
+  button, .edit-btn {
+    background: linear-gradient(145deg, #d4d4d4, #f9f9f9);
+    border: 2px solid #aaa;
+    border-radius: 6px;
+    box-shadow:
+      3px 3px 6px #b0b0b0,
+      -3px -3px 6px #ffffff;
+    color: #333;
+    font-weight: bold;
+    cursor: pointer;
+    transition: box-shadow 0.2s, color 0.2s;
+    padding: 6px 12px;
+  }
+  button:hover, .edit-btn:hover {
+    box-shadow:
+      inset 3px 3px 6px #b0b0b0,
+      inset -3px -3px 6px #ffffff;
+    color: #000;
+  }
+  button:focus, .edit-btn:focus {
+    outline: none;
+    border-color: #666;
+  }
+  button.cancel {
+    background-color: #dc3545;
+    color: white;
+    margin-left: 10px;
+  }
+  button.remove-btn {
+    background-color: #dc3545;
+    color: white;
+    margin-left: 10px;
+  }
+  .person {
+    border-bottom: 1px solid #ccc;
+    padding: 8px 2px;
+  }
+  .comments {
+    margin-left: 15px;
+    font-size: 0.9rem;
+    color: #555;
+    font-style: italic;
+    margin-top: 4px;
+  }
+  .edit-btn {
+    background-color: #4caf50;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+  }
+  .edit-btn:hover {
+    background-color: #45a049;
+  }
+  .edit-btn svg {
+    fill: white;
+    width: 18px;
+    height: 18px;
+  }
+  .filter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+  }
+  #selectComments {
+    margin-right: 6px;
+  }
+  label.onlycomments {
+    color: black !important;
+    font-weight: bold;
+    white-space: nowrap;
+    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  #btnSaveCloud {
+    margin-left: 1.5cm;
+    position: relative;
+    cursor: pointer;
+  }
+  #btnSaveCloud:hover::after {
+    content: "USO COLETIVO - CAUTELA!";
+    position: absolute;
+    top: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    color: red;
+    font-weight: bold;
+    padding: 4px 8px;
+    border: 1px solid red;
+    border-radius: 4px;
+    white-space: nowrap;
+    z-index: 100;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  }
+  @media (max-width:600px) {
+    body {
+      margin: 5px;
+      max-width: 100%;
+    }
+    .filter-row {
+      flex-wrap: wrap;
+    }
+    .filter-row input[type="text"] {
+      width: 80px;
+    }
+    button, input, select, textarea {
+      font-size: 0.9rem;
+    }
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    padding-top: 70px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+  }
+  .modal-content {
+    background-color: #f4f9f4;
+    margin: auto;
+    padding: 20px 30px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 450px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #333a;
+  }
+.filter {
+  border-bottom: 2px solid #ccc;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+</style>
+
+</head>
+<body>
+<h1>Grupo DGH</h1>
+
+<div style="text-align:center; margin-bottom: 20px;">
+  <button id="btnOpenAddModal">Incluir Participante</button>
+</div>
+
+<div class="filter">
+  <div class="filter-row">
+    <span style="font-weight:bold;">Filtros:</span>
+    <input type="text" id="filterCity" placeholder="Cidade" />
+    <input type="text" id="filterNeighborhood" placeholder="Bairro" />
+    <button id="btnApplyFilters">Aplicar</button>
+    <button id="btnClearFilters">Limpar</button>
+    <label for="selectComments" class="onlycomments" style="font-weight:bold; color:black;">
+    <label for="selectComments" class="onlycomments" style="margin-left:1cm; font-weight:bold; color:black;">
+  <input type="checkbox" id="selectComments" style="margin-right:4px;" />
+  Só com Comentários
+    </label>  
+  </div>
+</div>
+
+<div class="list" id="personList"></div>
+
+<div id="modalForm" class="modal" aria-hidden="true" role="dialog" aria-labelledby="modalTitle">
+  <div class="modal-content">
+    <h2 id="modalTitle">Adicionar/Editar Ex-Colega</h2>
+    <form id="formPerson">
+      <input type="hidden" id="personId" />
+      <label>Nome:<br /><input type="text" id="personName" required /></label><br />
+      <label>Cidade:<br /><input type="text" id="personCity" required /></label><br />
+      <label>Bairro:<br /><input type="text" id="personNeighborhood" required /></label><br />
+      <label>Locais/Locais frequentes (quando e onde):<br /><input type="text" id="personPlaces" /></label><br /><br />
+
+      <label>Comentários (um comentário por linha):<br />
+      <textarea id="personComments" rows="5" style="width:100%;"></textarea></label><br />
+
+      <button type="submit" id="btnSave">Salvar</button>
+      <button type="button" class="cancel" id="btnCancel">Cancelar</button>
+      <button type="button" class="remove-btn" id="btnRemove" style="float:right;">Remover</button>
+
+    </form>
+  </div>
+</div>
+
+<div class="import-export">
+  <p style="font-size: small; font-style: italic; text-align: center; margin-bottom: 4px;">
+  As mensagens/comentários se auto-extinguem após 15 dias. Se necessário, duplique-as antes disso.
+</p>
+<p style="font-size: small; font-style: italic; text-align: center; margin-bottom: 4px; margin-top:0;">
+  Podem ser parágrafos inteiros e aceitam links da web.
+</p>
+<p style="font-size: small; font-style: italic; text-align: center; margin-bottom: 4px; margin-top:0;">
+  Se possível informe locais públicos que frequenta, para possíveis encontros não programados.
+</p>
+  <button id="btnExport">Salvar em 'Downloads'</button>
+  <input type="file" id="fileImport" accept=".json" style="display:none;" />
+  <button id="btnImport">Carregar Dados</button>
+
+<button id="btnSaveCloud">Salvar na Nuvem</button>
+<button id="btnLoadCloud">Carregar da Nuvem</button>
+
+
+</div>
+
+<script>
+  const STORAGE_KEY = 'redeExColegasData';
+
+  let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || { pessoas: [] };
+  let mostrarTodosComentarios = false;
+
+  const modal = document.getElementById('modalForm');
+  const modalTitle = document.getElementById('modalTitle');
+  const personIdInp = document.getElementById('personId');
+  const personNameInp = document.getElementById('personName');
+  const personCityInp = document.getElementById('personCity');
+  const personNeighborhoodInp = document.getElementById('personNeighborhood');
+  const personPlacesInp = document.getElementById('personPlaces');
+  const personCommentsInp = document.getElementById('personComments');
+  const btnSave = document.getElementById('btnSave');
+  const btnCancel = document.getElementById('btnCancel');
+  const btnRemove = document.getElementById('btnRemove');
+
+  function generateId() {
+    return data.pessoas.length ? Math.max(...data.pessoas.map(p => p.id)) + 1 : 1;
+  }
+
+  function limparComentariosVelhos() {
+    const cutoff = new Date(Date.now() - 15*24*60*60*1000);
+    data.pessoas.forEach(p => {
+      if (Array.isArray(p.comentarios)) {
+        p.comentarios = p.comentarios.filter(c => new Date(c.data) > cutoff);
+      }
+    });
+    salvarDados();
+  }
+
+  function salvarDados() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function linkify(text) {
+    return text.replace(/(https?:\/\/[^\s]+|www\.[^\s]+)/g, function(url) {
+      let href = url.startsWith('www.') ? 'http://' + url : url;
+      return `<a href="${href}" target="_blank">${url}</a>`;
+    });
+  }
+
+  function renderizarLista() {
+    const cityFilter = document.getElementById('filterCity').value.toLowerCase();
+    const neighborhoodFilter = document.getElementById('filterNeighborhood').value.toLowerCase();
+    const filtrarComentarios = document.getElementById('selectComments').checked;
+    const listDiv = document.getElementById('personList');
+    listDiv.innerHTML = '';
+
+    data.pessoas.forEach(p => {
+      if (!Array.isArray(p.comentarios)) p.comentarios = [];
+      if (
+        (!cityFilter || p.cidade.toLowerCase().includes(cityFilter)) &&
+        (!neighborhoodFilter || p.bairro.toLowerCase().includes(neighborhoodFilter)) &&
+        (!filtrarComentarios || p.comentarios.length > 0)
+      ) {
+        let comentariosTexto = p.comentarios.map(c => {
+          const d = new Date(c.data);
+          let dia = d.getDate().toString().padStart(2, '0');
+          let mes = (d.getMonth() + 1).toString().padStart(2, '0');
+          return `<span style="display:block; margin-bottom:2px;">${dia}/${mes}: <i>${linkify(c.texto)}</i></span>`;
+        }).join('');
+
+        const div = document.createElement('div');
+        div.className = 'person';
+        div.innerHTML =
+          `<strong>${p.nome}</strong> - ${p.cidade} / ${p.bairro} - Locais/Horários: ${p.locaisFrequentados || ''}
+<button class="edit-btn" data-id="${p.id}" title="Editar">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 
+    7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 
+    0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
+  </svg>
+  Editar
+</button>
+          <div class="comments">${comentariosTexto}</div>`;
+
+        listDiv.appendChild(div);
+      }
+    });
+
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.onclick = e => {
+        const pid = parseInt(e.currentTarget.getAttribute('data-id'));
+        abrirModalEdicao(pid);
+      };
+    });
+  }
+
+  function abrirModalEdicao(id = null) {
+    if (id === null) {
+      modalTitle.textContent = 'Adicionar Ex-Colega';
+      btnRemove.style.display = 'none';
+      personIdInp.value = '';
+      personNameInp.value = '';
+      personCityInp.value = '';
+      personNeighborhoodInp.value = '';
+      personPlacesInp.value = '';
+      personCommentsInp.value = '';
+    } else {
+      const pessoa = data.pessoas.find(p => p.id === id);
+      if (!pessoa) return alert('Pessoa não encontrada.');
+      modalTitle.textContent = 'Editar Ex-Colega';
+      btnRemove.style.display = 'inline-block';
+
+      personIdInp.value = pessoa.id;
+      personNameInp.value = pessoa.nome;
+      personCityInp.value = pessoa.cidade;
+      personNeighborhoodInp.value = pessoa.bairro;
+      personPlacesInp.value = pessoa.locaisFrequentados || '';
+      personCommentsInp.value = (pessoa.comentarios || []).map(c => c.texto).join('\n');
+    }
+    modal.style.display = 'block';
+  }
+
+  btnCancel.onclick = () => {
+    modal.style.display = 'none';
+  };
+
+  window.onclick = e => {
+    if (e.target === modal) {
+      modal.style.display = 'none';
+    }
+  };
+
+  document.getElementById('formPerson').onsubmit = e => {
+    e.preventDefault();
+    const id = personIdInp.value ? parseInt(personIdInp.value) : null;
+    const nome = personNameInp.value.trim();
+    const cidade = personCityInp.value.trim();
+    const bairro = personNeighborhoodInp.value.trim();
+    const locais = personPlacesInp.value.trim();
+    const comentariosTexto = personCommentsInp.value.trim();
+    const linhasComentarios = comentariosTexto ? comentariosTexto.split('\n') : [];
+    const comentariosArray = linhasComentarios.map(linha => ({ texto: linha.trim(), data: new Date().toISOString() }));
+
+    if (!nome || !cidade || !bairro) {
+      return alert('Nome, cidade e bairro são obrigatórios.');
+    }
+
+    if (id === null) {
+      data.pessoas.push({
+        id: generateId(),
+        nome,
+        cidade,
+        bairro,
+        locaisFrequentados: locais,
+        comentarios: comentariosArray
+      });
+    } else {
+      const pessoa = data.pessoas.find(p => p.id === id);
+      if (!pessoa) return alert('Pessoa não encontrada.');
+      pessoa.nome = nome;
+      pessoa.cidade = cidade;
+      pessoa.bairro = bairro;
+      pessoa.locaisFrequentados = locais;
+      pessoa.comentarios = comentariosArray;
+    }
+    salvarDados();
+    modal.style.display = 'none';
+    renderizarLista();
+  };
+
+  btnRemove.onclick = () => {
+    const id = parseInt(personIdInp.value);
+    if (!id) return;
+    if (confirm('Confirma a remoção dessa pessoa?')) {
+      data.pessoas = data.pessoas.filter(p => p.id !== id);
+      salvarDados();
+      modal.style.display = 'none';
+      renderizarLista();
+    }
+  };
+
+  document.getElementById('btnOpenAddModal').onclick = () => abrirModalEdicao(null);
+
+  document.getElementById('btnApplyFilters').onclick = renderizarLista;
+  document.getElementById('btnClearFilters').onclick = () => {
+    document.getElementById('filterCity').value = '';
+    document.getElementById('filterNeighborhood').value = '';
+    renderizarLista();
+  };
+  document.getElementById('selectComments').onchange = e => {
+    mostrarTodosComentarios = e.target.checked;
+    renderizarLista();
+  };
+
+  document.getElementById('btnExport').onclick = () => {
+    const jsonStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'rede-excolegas.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  document.getElementById('btnImport').onclick = () => {
+    document.getElementById('fileImport').click();
+  };
+
+  document.getElementById('fileImport').onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        data = JSON.parse(ev.target.result);
+        salvarDados();
+        renderizarLista();
+        alert('Dados importados com sucesso.');
+      } catch {
+        alert('Arquivo JSON inválido.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  limparComentariosVelhos();
+  renderizarLista();
+</script>
+
+</body>
+</html>
